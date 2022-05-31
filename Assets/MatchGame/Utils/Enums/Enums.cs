@@ -13,6 +13,7 @@ public enum PlayerState
 
 public enum Layer
 {
+    Default = 0,
     CardCorrectAnswer = 10,
     CardWrongAnswer = 11
 }

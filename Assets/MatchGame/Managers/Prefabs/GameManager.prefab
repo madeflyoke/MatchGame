@@ -44,5 +44,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5d0498377e85be4188a479a1d0ed924, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  correctAnswerPointsAdd: 100
-  wrongAnswerPointsRemove: 50
+  correctAnswerPointsAdd: 25
+  wrongAnswerPointsRemove: 10

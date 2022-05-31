@@ -3,14 +3,13 @@ using UnityEngine;
 
 namespace MatchGame.GamePlay.VariantCards
 {
-    //[RequireComponent(typeof(Collider))]
+    [RequireComponent(typeof(Collider))]
     public class VariantCard : MonoBehaviour
     {
-        private SpriteRenderer spriteRenderer;
+        [SerializeField] private SpriteRenderer spriteRenderer;
 
         public void Initialize()
         {
-            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             gameObject.layer = (int)Layer.CardWrongAnswer;
         }
 

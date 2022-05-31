@@ -1,6 +1,4 @@
 using MatchGame.GamePlay.Category;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using System.Linq;
@@ -24,11 +22,11 @@ namespace MatchGame.GamePlay.VariantCards
 
         private void OnEnable()
         {
-            playerController.playerCategoryChangedEvent += SetVariants;
+            SetVariants(playerController.CurrentType);
         }
         private void OnDisable()
         {
-            playerController.playerCategoryChangedEvent -= SetVariants;
+            Refresh();
         }
 
         private void SetVariants(CategoryType playerType)
@@ -37,10 +35,22 @@ namespace MatchGame.GamePlay.VariantCards
             var wrongCard = correctCard == leftCard ? rightCard : leftCard;
             correctCard.gameObject.layer = (int)Layer.CardCorrectAnswer;
             wrongCard.gameObject.layer = (int)Layer.CardWrongAnswer;
-            correctCard.SetSprite(categoryData.Categories.Where((x) => x.type == playerType)
+            correctCard.SetSprite(categoryData.CardCategories.Where((x) => x.type == playerType)
                 .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
-            wrongCard.SetSprite(categoryData.Categories.Where((x) => x.type != playerType)
+            wrongCard.SetSprite(categoryData.CardCategories.Where((x) => x.type != playerType)
                 .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
+        }
+
+        public void AnswerGotLogic()
+        {
+            leftCard.gameObject.layer = (int)Layer.Default;
+            rightCard.gameObject.layer = (int)Layer.Default;
+        }
+
+        private void Refresh()
+        {
+            leftCard.SetSprite(null);
+            rightCard.SetSprite(null);
         }
     }
 }

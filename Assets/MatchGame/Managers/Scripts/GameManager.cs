@@ -1,9 +1,9 @@
 using MatchGame.GamePlay.Player;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
+using System.Linq;
 
 namespace MatchGame.Managers
 {
@@ -12,15 +12,41 @@ namespace MatchGame.Managers
         [Inject] private PlayerController playerController;
 
         public event Action pointsChangedEvent;
+        public event Action gameStartEvent;
+        public event Action gameEndEvent;
 
         [SerializeField] private int correctAnswerPointsAdd;
         [SerializeField] private int wrongAnswerPointsRemove;
 
         public int CurrentPoints { get; private set; }
+        private List<IPausable> pausables;
 
         private void Start()
         {
-            RefreshPoints();
+            pausables = new List<IPausable>();
+            foreach (var obj in FindObjectsOfType<MonoBehaviour>().OfType<IPausable>())
+            {
+                pausables.Add(obj);
+            }
+            Debug.Log(pausables.Count);
+            gameStartEvent?.Invoke();
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                Pause(true);
+            }
+            if (Input.GetKeyDown(KeyCode.U))
+            {
+                Pause(false);
+            }
+
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                gameEndEvent?.Invoke();
+            }
         }
 
         private void OnEnable()
@@ -32,15 +58,28 @@ namespace MatchGame.Managers
             playerController.isCorrectAnswerEvent -= SetPoints;
         }
 
-        public void RefreshPoints()
+        private void Pause(bool isTrue)
+        {
+            foreach (var item in pausables)
+            {
+                item.Pause(isTrue);
+            }
+        }
+
+        private void RefreshPoints()
         {
             CurrentPoints = 0;
             pointsChangedEvent?.Invoke();
         }
 
-        public void SetPoints(bool isCorrectAnswer)
+        private void SetPoints(bool isCorrectAnswer)
         {
             CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd : -wrongAnswerPointsRemove);
+            if (CurrentPoints<0)
+            {
+                gameEndEvent?.Invoke();
+                return;
+            }
             pointsChangedEvent?.Invoke();
         }
     }
