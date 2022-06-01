@@ -14,6 +14,9 @@ namespace MatchGame.GamePlay.VariantCards
         [SerializeField] private VariantCard leftCard;
         [SerializeField] private VariantCard rightCard;
 
+        public VariantCard LeftCard { get => leftCard; }
+        public VariantCard RightCard { get => rightCard; }
+
         private void Awake()
         {
             leftCard.Initialize();
@@ -51,6 +54,8 @@ namespace MatchGame.GamePlay.VariantCards
         {
             leftCard.SetSprite(null);
             rightCard.SetSprite(null);
+            leftCard.gameObject.layer = (int)Layer.Default;
+            rightCard.gameObject.layer = (int)Layer.Default;
         }
     }
 }

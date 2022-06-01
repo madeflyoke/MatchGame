@@ -18,6 +18,7 @@ namespace MatchGame.GamePlay.Track
 
         [SerializeField] private float cardsStep;
         [SerializeField] private float roadSpeed;
+        [SerializeField] private float speedUpAddByCorrectAnswer;
         [SerializeField] private Poolable variantCard;
         [SerializeField] private Material mat;
 
@@ -26,10 +27,20 @@ namespace MatchGame.GamePlay.Track
         private CancellationTokenSource stuffCancellationTokenSource;
         private Queue<GameObject> cardsQue;
         private Dictionary<GameObject, VariantCardsController> cardTypes;
-        private float CardSpeed { get => roadSpeed * 20f; }
+        private float CardSpeed { get => currentSpeed * 20f; }
+        private float currentSpeed;
+        private Vector3 playerCenterPosition
+        {
+              get => new Vector3(transform.position.x,
+              transform.position.y,
+              playerController.transform.position.z);
+        }
+
+        private bool wait;
 
         private void Awake()
         {
+            currentSpeed = roadSpeed;
             cardsQue = new Queue<GameObject>();
             cardTypes = new Dictionary<GameObject, VariantCardsController>();
             movingCancellationTokenSource = new CancellationTokenSource();
@@ -54,14 +65,26 @@ namespace MatchGame.GamePlay.Track
             Refresh();
         }
 
+        private void Update()
+        {
+            if (wait==false&&cardsQue != null && Vector3.Distance(playerController.transform.position, cardsQue.Peek().transform.position) <5f)
+            {
+                float d1 = cardTypes[cardsQue.Peek()].LeftCard.transform.position.x
+                    - playerController.transform.position.x;
+                float d2 = cardTypes[cardsQue.Peek()].RightCard.transform.position.x 
+                    - playerController.transform.position.x;
+                Debug.Log("LEFT: " + Mathf.Abs(d1) + " RIGHT: " + Mathf.Abs(d2));
+                wait = true; 
+            }
+        }
+
         private void InitCards()
         {
             SyncCardTypes(variantCard.gameObject);
             Vector3 step = new Vector3(0f, 0f, cardsStep);
             if (cardsQue.Count == 0) //first initialization cards setting
             {
-                Vector3 startPos = new Vector3(transform.position.x, transform.position.y,
-                    playerController.transform.position.z + cardsStep);
+                Vector3 startPos = playerCenterPosition + step;
                 int startCount = 3;
                 for (int i = 0; i < startCount; i++)
                 {
@@ -74,13 +97,14 @@ namespace MatchGame.GamePlay.Track
 
         private async void SetCards()
         {
+            currentSpeed = roadSpeed + (gameManager.CorrectAnswers * speedUpAddByCorrectAnswer);
             Vector3 step = new Vector3(0f, 0f, cardsStep);
-            var obj = pooler.GetObjectFromPool(variantCard.gameObject, cardsQue.Peek().transform.position + (step * 3));
-            cardsQue.Enqueue(obj);
             cardTypes[cardsQue.Peek()].AnswerGotLogic();
-            await UniTask.Delay(1000, cancellationToken: stuffCancellationTokenSource.Token);
-            cardsQue.Dequeue().SetActive(false);
-            cardsQue.Peek().SetActive(true);
+            //await UniTask.Delay(1000, cancellationToken: stuffCancellationTokenSource.Token);
+            var obj = pooler.GetObjectFromPool(variantCard.gameObject, playerCenterPosition + (step * 3));
+            cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
+            cardsQue.Enqueue(obj); //set new object in tail
+            cardsQue.Peek().SetActive(true); //activate next obj in head
         }
 
         private async void Move()
@@ -92,8 +116,7 @@ namespace MatchGame.GamePlay.Track
                     await UniTask.Yield(cancellationToken: movingCancellationTokenSource.Token);
                     continue;
                 }
-                Debug.Log("next");
-                mat.mainTextureOffset -= new Vector2(0f, Time.deltaTime * roadSpeed);
+                mat.mainTextureOffset -= new Vector2(0f, Time.deltaTime * currentSpeed);
                 if (cardsQue != null && cardsQue.Count != 0)
                 {
                     foreach (var item in cardsQue)
@@ -109,7 +132,7 @@ namespace MatchGame.GamePlay.Track
         public void Pause(bool isPaused)
         {
             IsPaused = isPaused;
-            
+
         }
 
         private void Stop()
@@ -130,7 +153,7 @@ namespace MatchGame.GamePlay.Track
             }
         }
 
-        
+
     }
 }
 

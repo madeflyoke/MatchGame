@@ -32,6 +32,7 @@ namespace MatchGame.Managers
                 {
                     GameObject go = container.InstantiatePrefab(poolObject.gameObject, transform.position, Quaternion.identity,null);
                     go.SetActive(false);
+                    go.name = i.ToString();
                     pool.Enqueue(go);
                 }
                 poolDict.Add(poolObject.gameObject, pool);

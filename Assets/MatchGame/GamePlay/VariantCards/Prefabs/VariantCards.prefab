@@ -181,8 +181,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 10, y: 2.220446e-16, z: 10}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 10, y: 2.4661524, z: 9.999998}
+  m_Center: {x: 0, y: 0.04264675, z: 0}
 --- !u!114 &3559725647199136014
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -377,8 +377,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 10, y: 2.220446e-16, z: 10}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 10, y: 2.1916034, z: 10}
+  m_Center: {x: 0, y: 0.022977367, z: 0}
 --- !u!114 &3559725648076351053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,7 +409,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3559725648420442802
 Transform:
   m_ObjectHideFlags: 0
@@ -453,4 +453,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 907a9eb3d4edafb4fa148a4126a1bf5f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectCount: 5
+  objectCount: 10

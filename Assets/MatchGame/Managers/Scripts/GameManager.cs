@@ -17,8 +17,9 @@ namespace MatchGame.Managers
 
         [SerializeField] private int correctAnswerPointsAdd;
         [SerializeField] private int wrongAnswerPointsRemove;
-
+        //SET MULTIPLIER BY COMBO!!!!!!!!!!!
         public int CurrentPoints { get; private set; }
+        public int CorrectAnswers { get; private set; }
         private List<IPausable> pausables;
 
         private void Start()
@@ -28,7 +29,6 @@ namespace MatchGame.Managers
             {
                 pausables.Add(obj);
             }
-            Debug.Log(pausables.Count);
             gameStartEvent?.Invoke();
         }
 
@@ -43,10 +43,10 @@ namespace MatchGame.Managers
                 Pause(false);
             }
 
-            if (Input.GetKeyDown(KeyCode.E))
-            {
-                gameEndEvent?.Invoke();
-            }
+            //if (Input.GetKeyDown(KeyCode.E))
+            //{
+            //    gameEndEvent?.Invoke();
+            //}
         }
 
         private void OnEnable()
@@ -74,12 +74,13 @@ namespace MatchGame.Managers
 
         private void SetPoints(bool isCorrectAnswer)
         {
+            CorrectAnswers += isCorrectAnswer ? 1 : 0;
             CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd : -wrongAnswerPointsRemove);
-            if (CurrentPoints<0)
-            {
-                gameEndEvent?.Invoke();
-                return;
-            }
+            //if (CurrentPoints<0)
+            //{
+            //    gameEndEvent?.Invoke();
+            //    return;
+            //}
             pointsChangedEvent?.Invoke();
         }
     }

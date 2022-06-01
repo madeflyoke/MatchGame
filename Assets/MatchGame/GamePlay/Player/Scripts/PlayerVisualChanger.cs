@@ -63,7 +63,6 @@ namespace MatchGame.GamePlay.Player
                 ChangeVisual(type);
                 return;
             }
-            Debug.Log("after");
             currentTypeObj.transform.position = transform.position;
             currentTypeObj.SetActive(true);
         }
