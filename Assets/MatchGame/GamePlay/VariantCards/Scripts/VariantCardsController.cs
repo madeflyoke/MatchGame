@@ -17,11 +17,11 @@ namespace MatchGame.GamePlay.VariantCards
         public VariantCard LeftCard { get => leftCard; }
         public VariantCard RightCard { get => rightCard; }
 
-        private void Awake()
-        {
-            leftCard.Initialize();
-            rightCard.Initialize();
-        }
+        //private void Awake()
+        //{
+        //    leftCard.Initialize();
+        //    rightCard.Initialize();
+        //}
 
         private void OnEnable()
         {
@@ -35,27 +35,31 @@ namespace MatchGame.GamePlay.VariantCards
         private void SetVariants(CategoryType playerType)
         {
             var correctCard = Random.Range(0, 2) == 0 ? leftCard : rightCard;
+            correctCard.IsCorrect = true;
             var wrongCard = correctCard == leftCard ? rightCard : leftCard;
-            correctCard.gameObject.layer = (int)Layer.CardCorrectAnswer;
-            wrongCard.gameObject.layer = (int)Layer.CardWrongAnswer;
+            wrongCard.IsCorrect = false;
+            //correctCard.gameObject.layer = (int)Layer.CardCorrectAnswer;
+            //wrongCard.gameObject.layer = (int)Layer.CardWrongAnswer;
             correctCard.SetSprite(categoryData.CardCategories.Where((x) => x.type == playerType)
                 .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
             wrongCard.SetSprite(categoryData.CardCategories.Where((x) => x.type != playerType)
                 .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
         }
 
-        public void AnswerGotLogic()
-        {
-            leftCard.gameObject.layer = (int)Layer.Default;
-            rightCard.gameObject.layer = (int)Layer.Default;
-        }
+        //public void AnswerGotLogic()
+        //{
+        //    leftCard.gameObject.layer = (int)Layer.Default;
+        //    rightCard.gameObject.layer = (int)Layer.Default;
+        //}
 
         private void Refresh()
         {
             leftCard.SetSprite(null);
             rightCard.SetSprite(null);
-            leftCard.gameObject.layer = (int)Layer.Default;
-            rightCard.gameObject.layer = (int)Layer.Default;
+            leftCard.IsCorrect = false;
+            rightCard.IsCorrect = false;
+            //leftCard.gameObject.layer = (int)Layer.Default;
+            //rightCard.gameObject.layer = (int)Layer.Default;
         }
     }
 }

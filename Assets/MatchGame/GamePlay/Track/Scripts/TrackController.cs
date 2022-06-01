@@ -7,6 +7,7 @@ using Zenject;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using MatchGame.GamePlay.Player;
+using System;
 
 namespace MatchGame.GamePlay.Track
 {
@@ -16,8 +17,11 @@ namespace MatchGame.GamePlay.Track
         [Inject] private PlayerController playerController;
         [Inject] private GameManager gameManager;
 
+        public event Action<bool> isCorrectAnswerEvent;
+
         [SerializeField] private float cardsStep;
         [SerializeField] private float roadSpeed;
+        [SerializeField] private float maxRoadSpeed;
         [SerializeField] private float speedUpAddByCorrectAnswer;
         [SerializeField] private Poolable variantCard;
         [SerializeField] private Material mat;
@@ -29,17 +33,18 @@ namespace MatchGame.GamePlay.Track
         private Dictionary<GameObject, VariantCardsController> cardTypes;
         private float CardSpeed { get => currentSpeed * 20f; }
         private float currentSpeed;
+        private VariantCardsController currentCardsController;
+
         private Vector3 playerCenterPosition
         {
-              get => new Vector3(transform.position.x,
-              transform.position.y,
-              playerController.transform.position.z);
+            get => new Vector3(transform.position.x,
+            transform.position.y,
+            playerController.transform.position.z);
         }
-
-        private bool wait;
 
         private void Awake()
         {
+            IsPaused = true;
             currentSpeed = roadSpeed;
             cardsQue = new Queue<GameObject>();
             cardTypes = new Dictionary<GameObject, VariantCardsController>();
@@ -49,7 +54,6 @@ namespace MatchGame.GamePlay.Track
 
         private void OnEnable()
         {
-            gameManager.pointsChangedEvent += SetCards;
             gameManager.gameStartEvent += Move;
             gameManager.gameStartEvent += InitCards;
             //gameManager.gameEndEvent += Stop;
@@ -57,7 +61,6 @@ namespace MatchGame.GamePlay.Track
         }
         private void OnDisable()
         {
-            gameManager.pointsChangedEvent -= SetCards;
             gameManager.gameStartEvent -= Move;
             gameManager.gameStartEvent -= InitCards;
             //gameManager.gameEndEvent -= Stop;
@@ -65,17 +68,32 @@ namespace MatchGame.GamePlay.Track
             Refresh();
         }
 
-        private void Update()
+        private async void CheckPlayerPosition()
         {
-            if (wait==false&&cardsQue != null && Vector3.Distance(playerController.transform.position, cardsQue.Peek().transform.position) <5f)
+            if (cardsQue == null||currentCardsController==null) return;
+            while (Vector3.Distance(playerController.transform.position,
+                currentCardsController.transform.position) > 5f)
             {
-                float d1 = cardTypes[cardsQue.Peek()].LeftCard.transform.position.x
-                    - playerController.transform.position.x;
-                float d2 = cardTypes[cardsQue.Peek()].RightCard.transform.position.x 
-                    - playerController.transform.position.x;
-                Debug.Log("LEFT: " + Mathf.Abs(d1) + " RIGHT: " + Mathf.Abs(d2));
-                wait = true; 
+                if (IsPaused == true)
+                {
+                    await UniTask.Yield(cancellationToken: stuffCancellationTokenSource.Token);
+                    continue;
+                }
+                await UniTask.Yield(cancellationToken: stuffCancellationTokenSource.Token);
             }
+            float leftCardDistance = currentCardsController.LeftCard.transform.position.x
+                - playerController.transform.position.x;
+            float rightCardDistance = currentCardsController.RightCard.transform.position.x
+                - playerController.transform.position.x;
+            var closestCard = Mathf.Abs(leftCardDistance) < Mathf.Abs(rightCardDistance)?
+                currentCardsController.LeftCard:currentCardsController.RightCard;
+            bool isCorrectAnswer = closestCard.IsCorrect ? true : false;
+            isCorrectAnswerEvent?.Invoke(isCorrectAnswer);
+            if (isCorrectAnswer==true&&currentSpeed<=maxRoadSpeed)
+            {
+                currentSpeed = Mathf.Clamp(currentSpeed+speedUpAddByCorrectAnswer,0f,maxRoadSpeed);
+            }
+            SetCards();
         }
 
         private void InitCards()
@@ -91,20 +109,23 @@ namespace MatchGame.GamePlay.Track
                     var obj = pooler.GetObjectFromPool(variantCard.gameObject, startPos + (step * i));
                     cardsQue.Enqueue(obj);
                 }
-                cardsQue.Peek().gameObject.SetActive(true);
+                currentCardsController = cardTypes[cardsQue.Peek()];
+                currentCardsController.gameObject.SetActive(true);
             }
+            IsPaused = false;
+            CheckPlayerPosition();
         }
 
         private async void SetCards()
         {
-            currentSpeed = roadSpeed + (gameManager.CorrectAnswers * speedUpAddByCorrectAnswer);
             Vector3 step = new Vector3(0f, 0f, cardsStep);
-            cardTypes[cardsQue.Peek()].AnswerGotLogic();
             //await UniTask.Delay(1000, cancellationToken: stuffCancellationTokenSource.Token);
             var obj = pooler.GetObjectFromPool(variantCard.gameObject, playerCenterPosition + (step * 3));
             cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
             cardsQue.Enqueue(obj); //set new object in tail
-            cardsQue.Peek().SetActive(true); //activate next obj in head
+            currentCardsController = cardTypes[cardsQue.Peek()];
+            currentCardsController.gameObject.SetActive(true); //activate next obj in head
+            CheckPlayerPosition();
         }
 
         private async void Move()
@@ -132,7 +153,6 @@ namespace MatchGame.GamePlay.Track
         public void Pause(bool isPaused)
         {
             IsPaused = isPaused;
-
         }
 
         private void Stop()
@@ -145,15 +165,13 @@ namespace MatchGame.GamePlay.Track
             mat.mainTextureOffset = Vector2.zero;
         }
 
-        private void SyncCardTypes(GameObject prefab)
+        private void SyncCardTypes(GameObject prefab) //set dictionary with pooler to get type
         {
             foreach (var item in pooler.PoolDict[prefab])
             {
                 cardTypes.Add(item, item.GetComponent<VariantCardsController>());
             }
         }
-
-
     }
 }
 

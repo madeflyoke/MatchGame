@@ -1,10 +1,11 @@
 using MatchGame.GamePlay.Category;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using System.Linq;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 namespace MatchGame.GamePlay.Player
 {
@@ -21,12 +22,40 @@ namespace MatchGame.GamePlay.Player
         }
 
         [SerializeField] private List<VisualSize> sizes;
+        [SerializeField] private float rotationSpeed;
         private Dictionary<CategoryType, List<GameObject>> visuals;
         private GameObject currentTypeObj;
+        private CancellationTokenSource cancellationTokenSource;
 
+        private void Update()
+        {
+            if (currentTypeObj != null)
+            {
+                transform.Rotate(
+                    Vector3.up * Time.deltaTime * rotationSpeed+
+                    Vector3.right * Time.deltaTime * rotationSpeed+
+                    Vector3.forward * Time.deltaTime * rotationSpeed,
+                    Space.Self);
+            }
+        }
+
+        //private async void Rotate()
+        //{
+        //    float prevTime = Time.time;
+        //    while (prevTime+)
+        //    {
+        //        transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation *
+        //            Quaternion.Euler(new Vector3(UnityEngine.Random.Range(-180f, 180f),
+        //            UnityEngine.Random.Range(-180f, 180f),
+        //            UnityEngine.Random.Range(-180f, 180f))),
+        //            Time.deltaTime * rotationSpeed);
+        //        await UniTask.Yield(cancellationTokenSource.Token);
+        //    }
+        //}
 
         private void Awake()
         {
+            cancellationTokenSource = new CancellationTokenSource();
             visuals = new Dictionary<CategoryType, List<GameObject>>();
             foreach (var playerCategory in categoryData.PlayerCategories)
             {

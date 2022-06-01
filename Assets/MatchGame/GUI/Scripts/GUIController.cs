@@ -10,6 +10,7 @@ namespace MatchGame.GUI
         [Inject] private GameManager gameManager;
 
         [SerializeField] private TMP_Text pointsField;
+        [SerializeField] private TMP_Text comboField;
 
         private void OnEnable()
         {
@@ -23,6 +24,8 @@ namespace MatchGame.GUI
         public void SetPoints()
         {
             pointsField.text = gameManager.CurrentPoints.ToString();
+            comboField.text = gameManager.CorrectAnswersInRow>0? 
+                "x "+gameManager.CorrectAnswersInRow.ToString():string.Empty;
         }
     }
 }

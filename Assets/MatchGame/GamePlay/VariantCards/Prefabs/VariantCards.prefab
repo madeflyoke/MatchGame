@@ -78,7 +78,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 5.12, y: 5.12}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
@@ -95,7 +95,6 @@ GameObject:
   - component: {fileID: 3559725647199136114}
   - component: {fileID: 3559725647199136113}
   - component: {fileID: 3559725647199136112}
-  - component: {fileID: 3559725647199136015}
   - component: {fileID: 3559725647199136014}
   m_Layer: 0
   m_Name: RightCard
@@ -112,7 +111,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3559725647199136117}
   m_LocalRotation: {x: -0.70710677, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 2.625, y: 2.25, z: 0}
+  m_LocalPosition: {x: 3.125, y: 3, z: 0}
   m_LocalScale: {x: 0.475, y: 0.4, z: 0.45000002}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -170,19 +169,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3559725647199136015
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3559725647199136117}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 10, y: 2.4661524, z: 9.999998}
-  m_Center: {x: 0, y: 0.04264675, z: 0}
 --- !u!114 &3559725647199136014
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,7 +207,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3559725647596705322}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.05, z: -0}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1.5, y: 1.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -291,7 +277,6 @@ GameObject:
   - component: {fileID: 3559725648076351921}
   - component: {fileID: 3559725648076351052}
   - component: {fileID: 3559725648076351055}
-  - component: {fileID: 3559725648076351050}
   - component: {fileID: 3559725648076351053}
   m_Layer: 0
   m_Name: LeftCard
@@ -308,7 +293,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3559725648076351920}
   m_LocalRotation: {x: -0.70710677, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: -2.625, y: 2.25, z: 0}
+  m_LocalPosition: {x: -3.125, y: 3, z: 0}
   m_LocalScale: {x: 0.475, y: 0.4, z: 0.44999}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -366,19 +351,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &3559725648076351050
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3559725648076351920}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 10, y: 2.1916034, z: 10}
-  m_Center: {x: 0, y: 0.022977367, z: 0}
 --- !u!114 &3559725648076351053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,7 +381,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3559725648420442802
 Transform:
   m_ObjectHideFlags: 0

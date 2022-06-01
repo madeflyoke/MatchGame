@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using System.Linq;
+using MatchGame.GamePlay.Track;
 
 namespace MatchGame.Managers
 {
@@ -17,10 +18,17 @@ namespace MatchGame.Managers
 
         [SerializeField] private int correctAnswerPointsAdd;
         [SerializeField] private int wrongAnswerPointsRemove;
-        //SET MULTIPLIER BY COMBO!!!!!!!!!!!
+        [SerializeField] private int maxCombo = 10;
+        //SET MULTIPLIER BY COMBO!!!!!!!!!!! maybe
         public int CurrentPoints { get; private set; }
-        public int CorrectAnswers { get; private set; }
+        public int CorrectAnswersInRow { get; private set; }
         private List<IPausable> pausables;
+        private TrackController trackController;
+
+        private void Awake()
+        {
+            trackController = FindObjectOfType<TrackController>();
+        }
 
         private void Start()
         {
@@ -51,11 +59,11 @@ namespace MatchGame.Managers
 
         private void OnEnable()
         {
-            playerController.isCorrectAnswerEvent += SetPoints;
+            trackController.isCorrectAnswerEvent += SetPoints;
         }
         private void OnDisable()
         {
-            playerController.isCorrectAnswerEvent -= SetPoints;
+            trackController.isCorrectAnswerEvent -= SetPoints;
         }
 
         private void Pause(bool isTrue)
@@ -69,13 +77,14 @@ namespace MatchGame.Managers
         private void RefreshPoints()
         {
             CurrentPoints = 0;
+            CorrectAnswersInRow = 0;
             pointsChangedEvent?.Invoke();
         }
 
         private void SetPoints(bool isCorrectAnswer)
         {
-            CorrectAnswers += isCorrectAnswer ? 1 : 0;
-            CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd : -wrongAnswerPointsRemove);
+            CorrectAnswersInRow = isCorrectAnswer ? Mathf.Clamp(CorrectAnswersInRow+1,0,maxCombo) : 0;
+            CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd*CorrectAnswersInRow : -wrongAnswerPointsRemove);
             //if (CurrentPoints<0)
             //{
             //    gameEndEvent?.Invoke();
