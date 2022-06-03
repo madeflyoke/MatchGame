@@ -4,12 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using System.Linq;
-using Cysharp.Threading.Tasks;
-using System.Threading;
 
 namespace MatchGame.GamePlay.Player
 {
-    public class PlayerVisualChanger : MonoBehaviour
+    public class PlayerVisualChanger : MonoBehaviour, IPausable
     {
         [Inject] private PlayerController playerController;
         [Inject] private CategoryData categoryData;
@@ -23,13 +21,14 @@ namespace MatchGame.GamePlay.Player
 
         [SerializeField] private List<VisualSize> sizes;
         [SerializeField] private float rotationSpeed;
+
+        public bool IsPaused { get; set; }     
         private Dictionary<CategoryType, List<GameObject>> visuals;
         private GameObject currentTypeObj;
-        private CancellationTokenSource cancellationTokenSource;
 
         private void Update()
         {
-            if (currentTypeObj != null)
+            if (IsPaused==false&&currentTypeObj != null)
             {
                 transform.Rotate(
                     Vector3.up * Time.deltaTime * rotationSpeed+
@@ -39,36 +38,26 @@ namespace MatchGame.GamePlay.Player
             }
         }
 
-        //private async void Rotate()
-        //{
-        //    float prevTime = Time.time;
-        //    while (prevTime+)
-        //    {
-        //        transform.rotation = Quaternion.Slerp(transform.rotation, transform.rotation *
-        //            Quaternion.Euler(new Vector3(UnityEngine.Random.Range(-180f, 180f),
-        //            UnityEngine.Random.Range(-180f, 180f),
-        //            UnityEngine.Random.Range(-180f, 180f))),
-        //            Time.deltaTime * rotationSpeed);
-        //        await UniTask.Yield(cancellationTokenSource.Token);
-        //    }
-        //}
-
         private void Awake()
         {
-            cancellationTokenSource = new CancellationTokenSource();
+            SetupVisuals();
+        }
+
+        private void SetupVisuals()
+        {
             visuals = new Dictionary<CategoryType, List<GameObject>>();
             foreach (var playerCategory in categoryData.PlayerCategories)
             {
-                List<GameObject> categoryList=new List<GameObject>();
+                List<GameObject> categoryList = new List<GameObject>();
                 foreach (var item in playerCategory.visuals)
                 {
                     GameObject categoryObject = Instantiate(item, transform, false);
                     categoryObject.SetActive(false);
-                    float size = sizes.Where(x => x.type == playerCategory.type).Select(x=>x.scale).FirstOrDefault();
+                    float size = sizes.Where(x => x.type == playerCategory.type).Select(x => x.scale).FirstOrDefault();
                     categoryObject.transform.localScale *= size == 0 ? 1 : size;
                     categoryList.Add(categoryObject);
                 }
-                visuals.Add(playerCategory.type,categoryList);
+                visuals.Add(playerCategory.type, categoryList);
             }
         }
 
@@ -94,6 +83,11 @@ namespace MatchGame.GamePlay.Player
             }
             currentTypeObj.transform.position = transform.position;
             currentTypeObj.SetActive(true);
+        }
+
+        public void Pause(bool isPaused)
+        {
+            IsPaused = isPaused;
         }
     }
 }

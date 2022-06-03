@@ -34,7 +34,6 @@ namespace MatchGame.GamePlay.Track
         private float CardSpeed { get => currentSpeed * 20f; }
         private float currentSpeed;
         private VariantCardsController currentCardsController;
-
         private Vector3 playerCenterPosition
         {
             get => new Vector3(transform.position.x,
@@ -44,7 +43,16 @@ namespace MatchGame.GamePlay.Track
 
         private void Awake()
         {
-            IsPaused = true;
+            Initialize();
+        }
+
+        private void Start()
+        {
+            SetupStartCards();
+        }
+
+        private void Initialize()
+        {
             currentSpeed = roadSpeed;
             cardsQue = new Queue<GameObject>();
             cardTypes = new Dictionary<GameObject, VariantCardsController>();
@@ -54,15 +62,13 @@ namespace MatchGame.GamePlay.Track
 
         private void OnEnable()
         {
-            gameManager.gameStartEvent += Move;
-            gameManager.gameStartEvent += InitCards;
+            gameManager.gameStartEvent += HandeOnStartGame;
             //gameManager.gameEndEvent += Stop;
             pooler.capacityChangedEvent += SyncCardTypes;
         }
         private void OnDisable()
         {
-            gameManager.gameStartEvent -= Move;
-            gameManager.gameStartEvent -= InitCards;
+            gameManager.gameStartEvent -= HandeOnStartGame;
             //gameManager.gameEndEvent -= Stop;
             pooler.capacityChangedEvent -= SyncCardTypes;
             Refresh();
@@ -71,8 +77,8 @@ namespace MatchGame.GamePlay.Track
         private async void CheckPlayerPosition()
         {
             if (cardsQue == null||currentCardsController==null) return;
-            while (Vector3.Distance(playerController.transform.position,
-                currentCardsController.transform.position) > 5f)
+            while (Vector3.Distance(playerCenterPosition,
+                currentCardsController.transform.position) > 2f)
             {
                 if (IsPaused == true)
                 {
@@ -81,22 +87,34 @@ namespace MatchGame.GamePlay.Track
                 }
                 await UniTask.Yield(cancellationToken: stuffCancellationTokenSource.Token);
             }
+            CheckPlayerAnswer();
+        }
+
+        private void CheckPlayerAnswer()
+        {
             float leftCardDistance = currentCardsController.LeftCard.transform.position.x
                 - playerController.transform.position.x;
             float rightCardDistance = currentCardsController.RightCard.transform.position.x
                 - playerController.transform.position.x;
-            var closestCard = Mathf.Abs(leftCardDistance) < Mathf.Abs(rightCardDistance)?
-                currentCardsController.LeftCard:currentCardsController.RightCard;
+            var closestCard = Mathf.Abs(leftCardDistance) < Mathf.Abs(rightCardDistance) ?
+                currentCardsController.LeftCard : currentCardsController.RightCard;
             bool isCorrectAnswer = closestCard.IsCorrect ? true : false;
             isCorrectAnswerEvent?.Invoke(isCorrectAnswer);
-            if (isCorrectAnswer==true&&currentSpeed<=maxRoadSpeed)
+            if (isCorrectAnswer == true && currentSpeed <= maxRoadSpeed)
             {
-                currentSpeed = Mathf.Clamp(currentSpeed+speedUpAddByCorrectAnswer,0f,maxRoadSpeed);
+                currentSpeed = Mathf.Clamp(currentSpeed + speedUpAddByCorrectAnswer, 0f, maxRoadSpeed);
             }
             SetCards();
         }
 
-        private void InitCards()
+        private void HandeOnStartGame()
+        {      
+            currentCardsController.gameObject.SetActive(true);
+            Move();
+            CheckPlayerPosition();
+        }
+
+        private void SetupStartCards()
         {
             SyncCardTypes(variantCard.gameObject);
             Vector3 step = new Vector3(0f, 0f, cardsStep);
@@ -110,16 +128,13 @@ namespace MatchGame.GamePlay.Track
                     cardsQue.Enqueue(obj);
                 }
                 currentCardsController = cardTypes[cardsQue.Peek()];
-                currentCardsController.gameObject.SetActive(true);
             }
-            IsPaused = false;
-            CheckPlayerPosition();
         }
 
         private async void SetCards()
         {
             Vector3 step = new Vector3(0f, 0f, cardsStep);
-            //await UniTask.Delay(1000, cancellationToken: stuffCancellationTokenSource.Token);
+            await UniTask.Delay(500, cancellationToken: stuffCancellationTokenSource.Token);
             var obj = pooler.GetObjectFromPool(variantCard.gameObject, playerCenterPosition + (step * 3));
             cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
             cardsQue.Enqueue(obj); //set new object in tail

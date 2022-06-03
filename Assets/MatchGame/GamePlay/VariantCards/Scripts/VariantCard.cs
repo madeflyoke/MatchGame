@@ -11,9 +11,7 @@ namespace MatchGame.GamePlay.VariantCards
         public void SetSprite(Sprite sprite)
         {
             this.spriteRenderer.sprite = sprite;
-        }       
-        
-
+        }             
     }
 }
 

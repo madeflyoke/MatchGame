@@ -2,6 +2,8 @@ public enum CategoryType
 {
     Food,
     Vehicle,
+    Human,
+    Toys
 }
 
 public enum PlayerState
@@ -11,9 +13,3 @@ public enum PlayerState
     MovingRight,
 }
 
-//public enum Layer
-//{
-//    Default = 0,
-//    CardCorrectAnswer = 10,
-//    CardWrongAnswer = 11
-//}

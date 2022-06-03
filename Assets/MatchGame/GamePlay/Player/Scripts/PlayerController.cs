@@ -25,7 +25,6 @@ namespace MatchGame.GamePlay.Player
         private float rightLineX;
         private PlayerState currentState;
         private CategoryType currentType;
-        private BoxCollider boxCollider;
 
         private void Awake()
         {
@@ -40,8 +39,6 @@ namespace MatchGame.GamePlay.Player
             transform.position = new Vector3(UnityEngine.Random.Range(0, 2) == 0 ? leftLineX : rightLineX,
                 transform.position.y, transform.position.z);
             SetState(PlayerState.None);
-            //boxCollider = GetComponent<BoxCollider>();
-            //boxCollider.isTrigger = true;
         }
 
         private void OnEnable()
@@ -78,27 +75,12 @@ namespace MatchGame.GamePlay.Player
         public void Pause(bool isPaused)
         {
             IsPaused = isPaused;
-            boxCollider.isTrigger = !IsPaused;
         }
 
         private void EndGameLogic()
         {
             enabled = false;
-            //boxCollider.isTrigger = false;
         }
-
-        //private void OnTriggerEnter(Collider other)
-        //{
-        //    if (other.gameObject.layer == (int)Layer.CardCorrectAnswer)
-        //    {
-        //        isCorrectAnswerEvent?.Invoke(true);
-        //    }
-        //    else if (other.gameObject.layer == (int)Layer.CardWrongAnswer)
-        //    {
-        //        isCorrectAnswerEvent?.Invoke(false);
-        //    }
-        //    ChangeCategory();
-        //}
 
         private void ChangeCategory()
         {

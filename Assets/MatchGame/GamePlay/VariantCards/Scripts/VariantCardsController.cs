@@ -1,7 +1,6 @@
 using MatchGame.GamePlay.Category;
 using UnityEngine;
 using Zenject;
-using System.Linq;
 using MatchGame.GamePlay.Player;
 
 namespace MatchGame.GamePlay.VariantCards
@@ -17,11 +16,6 @@ namespace MatchGame.GamePlay.VariantCards
         public VariantCard LeftCard { get => leftCard; }
         public VariantCard RightCard { get => rightCard; }
 
-        //private void Awake()
-        //{
-        //    leftCard.Initialize();
-        //    rightCard.Initialize();
-        //}
 
         private void OnEnable()
         {
@@ -38,19 +32,9 @@ namespace MatchGame.GamePlay.VariantCards
             correctCard.IsCorrect = true;
             var wrongCard = correctCard == leftCard ? rightCard : leftCard;
             wrongCard.IsCorrect = false;
-            //correctCard.gameObject.layer = (int)Layer.CardCorrectAnswer;
-            //wrongCard.gameObject.layer = (int)Layer.CardWrongAnswer;
-            correctCard.SetSprite(categoryData.CardCategories.Where((x) => x.type == playerType)
-                .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
-            wrongCard.SetSprite(categoryData.CardCategories.Where((x) => x.type != playerType)
-                .Select((x) => x.sprites[Random.Range(0, x.sprites.Count)]).FirstOrDefault());
+            correctCard.SetSprite(categoryData.GetRandomCorrectSprite(playerType));
+            wrongCard.SetSprite(categoryData.GetRandomWrongSprite(playerType));
         }
-
-        //public void AnswerGotLogic()
-        //{
-        //    leftCard.gameObject.layer = (int)Layer.Default;
-        //    rightCard.gameObject.layer = (int)Layer.Default;
-        //}
 
         private void Refresh()
         {
@@ -58,8 +42,6 @@ namespace MatchGame.GamePlay.VariantCards
             rightCard.SetSprite(null);
             leftCard.IsCorrect = false;
             rightCard.IsCorrect = false;
-            //leftCard.gameObject.layer = (int)Layer.Default;
-            //rightCard.gameObject.layer = (int)Layer.Default;
         }
     }
 }
