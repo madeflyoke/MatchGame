@@ -1,8 +1,10 @@
 using UnityEngine;
-using TMPro;
 using Zenject;
 using MatchGame.Managers;
 using MatchGame.GUI.GamePlay.Buttons;
+using MatchGame.GUI.EndGame;
+using MatchGame.GUI.GamePlay;
+using MatchGame.GUI.Tutorial;
 
 namespace MatchGame.GUI
 {
@@ -10,50 +12,62 @@ namespace MatchGame.GUI
     {
         [Inject] private GameManager gameManager;
 
-        [SerializeField] private TMP_Text pointsField;
-        [SerializeField] private TMP_Text comboField;
-        [SerializeField] private PauseButton pauseButton;
-        [SerializeField] private StartGameButton startGameButton;
+        [SerializeField] private EndGameScreen endGameScreen;
+        [SerializeField] private GamePlayScreen gamePlayScreen;
+        [SerializeField] private TutorialController tutorialController;
 
-        public PauseButton PauseButton { get => pauseButton; }
-        public StartGameButton StartGameButton { get => startGameButton; }
+        public bool TutorialWasShown { get; private set; }
 
         private void Awake()
         {
-            HideHUD(true);
+            gamePlayScreen.Hide(true);
+            endGameScreen.Hide(true);
+            tutorialController.Hide(true);
         }
 
         private void OnEnable()
         {
-            gameManager.gameStartEvent += StartGameLogic;
-            gameManager.pointsChangedEvent += SetPoints;
+            gameManager.gameplayStartEvent += StartGameLogic;
+            gameManager.gameplayEndEvent += EndGameLogic;
+            gameManager.refreshEvent += Refresh;
         }
         private void OnDisable()
         {
-            gameManager.pointsChangedEvent -= SetPoints;
-            gameManager.gameStartEvent -= StartGameLogic;
+            gameManager.gameplayStartEvent -= StartGameLogic;
+            gameManager.gameplayEndEvent -= EndGameLogic;
+            gameManager.refreshEvent -= Refresh;
         }
 
-        private void HideHUD(bool isHidden)
+        public void SetPreparations()
         {
-            pointsField.gameObject.SetActive(!isHidden);
-            comboField.gameObject.SetActive(!isHidden);
-            pauseButton.gameObject.SetActive(!isHidden);
+            gamePlayScreen.Hide(false);
+            if (TutorialWasShown==false)
+            {
+                tutorialController.Hide(false);
+                TutorialWasShown = true;
+                gamePlayScreen.BlockHUD(true);
+            }       
         }
 
         private void StartGameLogic()
         {
-            startGameButton.gameObject.SetActive(false);
-            SetPoints();
-            HideHUD(false);
+            tutorialController.Hide(true);
+            gamePlayScreen.BlockHUD(false);
         }
 
-        private void SetPoints()
+        private void EndGameLogic()
         {
-            pointsField.text = gameManager.CurrentPoints.ToString();
-            comboField.text = gameManager.CorrectAnswersInRow>0? 
-                "x"+gameManager.CorrectAnswersInRow.ToString():string.Empty;
+            gamePlayScreen.Hide(true);
+            gamePlayScreen.BlockHUD(true);
+            endGameScreen.Hide(false);
+            endGameScreen.SetValues(gameManager.MaxAchievedPoints, gameManager.PlayerPrefsData.RecordScore);
         }
+
+        private void Refresh()
+        {
+            endGameScreen.Hide(true);
+            gamePlayScreen.Refresh();
+        }      
     }
 }
 

@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
 using System.Linq;
+using Cysharp.Threading.Tasks;
+using DG.Tweening;
+using MatchGame.Managers;
 
 namespace MatchGame.GamePlay.Player
 {
     public class PlayerVisualChanger : MonoBehaviour, IPausable
     {
-        [Inject] private PlayerController playerController;
         [Inject] private CategoryData categoryData;
 
         [Serializable]
@@ -26,6 +28,12 @@ namespace MatchGame.GamePlay.Player
         private Dictionary<CategoryType, List<GameObject>> visuals;
         private GameObject currentTypeObj;
 
+        private void Awake()
+        {
+            SetupVisuals();
+            transform.localScale = Vector3.zero;
+        }
+
         private void Update()
         {
             if (IsPaused==false&&currentTypeObj != null)
@@ -36,11 +44,6 @@ namespace MatchGame.GamePlay.Player
                     Vector3.forward * Time.deltaTime * rotationSpeed,
                     Space.Self);
             }
-        }
-
-        private void Awake()
-        {
-            SetupVisuals();
         }
 
         private void SetupVisuals()
@@ -61,16 +64,7 @@ namespace MatchGame.GamePlay.Player
             }
         }
 
-        private void OnEnable()
-        {
-            playerController.playerCategoryChangedEvent += ChangeVisual;
-        }
-        private void OnDisable()
-        {
-            playerController.playerCategoryChangedEvent += ChangeVisual;
-        }
-
-        private void ChangeVisual(CategoryType type)
+        public void ChangeVisual(CategoryType type)
         {
             if (currentTypeObj!=null) currentTypeObj.SetActive(false);
             GameObject prevObj = currentTypeObj;
@@ -88,6 +82,18 @@ namespace MatchGame.GamePlay.Player
         public void Pause(bool isPaused)
         {
             IsPaused = isPaused;
+        }
+
+        public void Refresh()
+        {
+            transform.localScale = Vector3.zero;
+        }
+
+        public async UniTask<bool> SetPreparation()
+        {
+            await UniTask.WhenAny(transform.DOScale(Vector3.one, 0.1f).AsyncWaitForCompletion().AsUniTask().ContinueWith(() =>
+            transform.DOPunchScale(Vector3.one * 0.4f, 0.3f).AsyncWaitForCompletion()).AsUniTask());
+            return true;
         }
     }
 }

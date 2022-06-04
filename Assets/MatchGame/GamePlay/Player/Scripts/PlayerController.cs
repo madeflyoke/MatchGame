@@ -11,8 +11,6 @@ namespace MatchGame.GamePlay.Player
     {
         [Inject] private GameManager gameManager; 
 
-        public event Action<CategoryType> playerCategoryChangedEvent;
-
         [SerializeField] private float sideSpeed;
         [SerializeField] private Transform leftLine;
         [SerializeField] private Transform rightLine;
@@ -25,10 +23,18 @@ namespace MatchGame.GamePlay.Player
         private float rightLineX;
         private PlayerState currentState;
         private CategoryType currentType;
+        private PlayerVisualChanger visualChanger;
+
 
         private void Awake()
         {
+            visualChanger = GetComponentInChildren<PlayerVisualChanger>();
             Initialize();
+        }
+
+        private void Start()
+        {
+            ChangeCategory();
         }
 
         private void Initialize()
@@ -43,13 +49,15 @@ namespace MatchGame.GamePlay.Player
 
         private void OnEnable()
         {
-            gameManager.gameStartEvent += ChangeCategory;
             gameManager.pointsChangedEvent += ChangeCategory;
+            gameManager.gameplayEndEvent += EndGameLogic;
+            gameManager.refreshEvent += Refresh;
         }
         private void OnDisable()
         {
-            gameManager.gameStartEvent -= ChangeCategory;
             gameManager.pointsChangedEvent -= ChangeCategory;
+            gameManager.gameplayEndEvent -= EndGameLogic;
+            gameManager.refreshEvent -= Refresh;
         }
 
         void Update()
@@ -77,9 +85,17 @@ namespace MatchGame.GamePlay.Player
             IsPaused = isPaused;
         }
 
+        private void Refresh()
+        {
+            cancellationTokenSource = new CancellationTokenSource();
+            ChangeCategory();
+            visualChanger.Refresh();
+        }
+
         private void EndGameLogic()
         {
-            enabled = false;
+            cancellationTokenSource.Cancel();
+            SetState(PlayerState.None);
         }
 
         private void ChangeCategory()
@@ -87,7 +103,7 @@ namespace MatchGame.GamePlay.Player
             int rndNumber = UnityEngine.Random.Range(0, Enum.GetValues(typeof(CategoryType)).Length);
             CategoryType nextType = (CategoryType)rndNumber;
             currentType = nextType;
-            playerCategoryChangedEvent?.Invoke(currentType);
+            visualChanger.ChangeVisual(currentType);
         }
 
         private void SetState(PlayerState state)

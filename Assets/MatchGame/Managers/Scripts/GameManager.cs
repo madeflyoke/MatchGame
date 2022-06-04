@@ -6,6 +6,12 @@ using System.Linq;
 using MatchGame.GamePlay.Track;
 using MatchGame.GUI.GamePlay.Buttons;
 using MatchGame.GUI;
+using MatchGame.Utils;
+using MatchGame.GamePlay.Player;
+using Cysharp.Threading.Tasks;
+using MatchGame.Repository;
+using MatchGame.GUI.Tutorial.Buttons;
+using MatchGame.GUI.EndGame.Buttons;
 
 namespace MatchGame.Managers
 {
@@ -14,97 +20,150 @@ namespace MatchGame.Managers
         [Inject] private GUIController gUIController;
 
         public event Action pointsChangedEvent;
-        public event Action gameStartEvent;
-        public event Action gameEndEvent;
+
+        public event Action gameplayStartEvent;
+        public event Action gameplayEndEvent;
+        public event Action refreshEvent;
 
         [SerializeField] private int correctAnswerPointsAdd;
         [SerializeField] private int wrongAnswerPointsRemove;
         [SerializeField] private int maxCombo = 10;
 
         public int CurrentPoints { get; private set; }
+        public int MaxAchievedPoints { get; private set; }
         public int CorrectAnswersInRow { get; private set; }
+        public PlayerPrefsData PlayerPrefsData { get; private set; }
 
         private TrackController trackController;
         private PauseManager pauseManager;
+        private CameraController cameraController;
+        private PlayerVisualChanger playerVisualChanger;
 
         private void Awake()
         {
-            pauseManager = new PauseManager(gUIController.PauseButton);
+            Application.targetFrameRate = 240;
+            pauseManager = new PauseManager();
+            PlayerPrefsData = new PlayerPrefsData();
+            PlayerPrefsData.Refresh();
             trackController = FindObjectOfType<TrackController>();
+            cameraController = FindObjectOfType<CameraController>();
+            playerVisualChanger = FindObjectOfType<PlayerVisualChanger>();
             pauseManager.Pause(true);
-        }
-
-        private void Update()
-        {
-            //if (Input.GetKeyDown(KeyCode.E))
-            //{
-            //    gameEndEvent?.Invoke();
-            //}
         }
 
         private void OnEnable()
         {
-            gUIController.StartGameButton.startGameButtonEvent += StartGame;
             trackController.isCorrectAnswerEvent += SetPoints;
-            pauseManager.OnEnable();
         }
         private void OnDisable()
         {
-            gUIController.StartGameButton.startGameButtonEvent -= StartGame;
             trackController.isCorrectAnswerEvent -= SetPoints;
-            pauseManager.OnDisable();
         }
 
-        public void StartGame()
+        private void StartPreparations() //try callback!!!!!!!!!
+        {
+            cameraController.SetPreparation().GetAwaiter()
+                .OnCompleted(() => UniTask.Delay(250).GetAwaiter()
+                .OnCompleted(() => playerVisualChanger.SetPreparation().GetAwaiter()
+                .OnCompleted(() => UniTask.Delay(1000).GetAwaiter()
+                .OnCompleted(() =>
+                {
+                    trackController.SetPreparation();
+                    if (gUIController.TutorialWasShown) StartGameplay();                  
+                    gUIController.SetPreparations();
+                }
+                ))));
+        }
+
+        public void ButtonCall(BaseButton button)
+        {
+            var type = button.GetType();
+            if (type == typeof(LaunchGameButton))
+            {
+                StartPreparations();
+            }
+            else if (type == typeof(TutorialConfirmButton))
+            {
+                StartGameplay();
+            }
+            else if (type == typeof(PauseButton))
+            {
+                pauseManager.Pause();
+            }
+            else if (type == typeof(RetryButton))
+            {
+                RetryGame();
+            }
+        }
+
+        private void StartGameplay()
         {
             pauseManager.Pause(false);
-            gameStartEvent?.Invoke();
+            gameplayStartEvent?.Invoke();
+        }
+
+        private void EndGamePlay()
+        {
+            pauseManager.Pause(true);
+            gameplayEndEvent?.Invoke();
+        }
+
+        private async void RetryGame()
+        {
+            RefreshPoints();
+            refreshEvent?.Invoke();
+            await UniTask.Delay(1000); // wait for everyone??
+            StartPreparations();
         }
 
         private void RefreshPoints()
         {
             CurrentPoints = 0;
             CorrectAnswersInRow = 0;
-            pointsChangedEvent?.Invoke();
         }
 
         private void SetPoints(bool isCorrectAnswer)
         {
             CorrectAnswersInRow = isCorrectAnswer ? Mathf.Clamp(CorrectAnswersInRow + 1, 0, maxCombo) : 0;
             CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd * CorrectAnswersInRow : -wrongAnswerPointsRemove);
-            //if (CurrentPoints<0)
-            //{
-            //    gameEndEvent?.Invoke();
-            //    return;
-            //}
+            MaxAchievedPoints = CurrentPoints > MaxAchievedPoints ? CurrentPoints : MaxAchievedPoints;
+            if (CurrentPoints < 0)
+            {
+                if (MaxAchievedPoints > PlayerPrefsData.RecordScore) 
+                { 
+                    PlayerPrefsData.SetRecordScore(MaxAchievedPoints); 
+                }
+                EndGamePlay();
+                return;
+            }
             pointsChangedEvent?.Invoke();
         }
-
         private class PauseManager
         {
-            private PauseButton pauseButton;
             private List<IPausable> pausables;
+            private bool isPaused;
 
-            public void Pause(bool isTrue)
+            public void Pause()
             {
                 foreach (var item in pausables)
                 {
-                    item.Pause(isTrue);
+                    item.Pause(!isPaused);
                 }
+                isPaused = !isPaused;
             }
 
-            public void OnEnable()
+            public void Pause(bool isPaused)
             {
-                if (pauseButton != null) this.pauseButton.pauseButtonEvent += Pause;
-            }
-            public void OnDisable()
-            {
-                if (pauseButton != null) this.pauseButton.pauseButtonEvent -= Pause;
+                foreach (var item in pausables)
+                {
+                    item.Pause(isPaused);
+                }
+                this.isPaused = isPaused;
             }
 
-            public PauseManager(PauseButton pauseButton)
+            public PauseManager()
             {
-                this.pauseButton = pauseButton;
+                isPaused = false;
                 pausables = new List<IPausable>();
                 foreach (var obj in FindObjectsOfType<MonoBehaviour>().OfType<IPausable>())
                 {
@@ -112,6 +171,7 @@ namespace MatchGame.Managers
                 }
             }
         }
-    }
+    }   
 }
+
 

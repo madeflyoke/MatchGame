@@ -1,6 +1,5 @@
 using MatchGame.GamePlay.VariantCards;
 using MatchGame.Managers;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Zenject;
@@ -48,6 +47,7 @@ namespace MatchGame.GamePlay.Track
 
         private void Start()
         {
+            SyncCardTypes(variantCard.gameObject);
             SetupStartCards();
         }
 
@@ -55,28 +55,60 @@ namespace MatchGame.GamePlay.Track
         {
             currentSpeed = roadSpeed;
             cardsQue = new Queue<GameObject>();
-            cardTypes = new Dictionary<GameObject, VariantCardsController>();
             movingCancellationTokenSource = new CancellationTokenSource();
             stuffCancellationTokenSource = new CancellationTokenSource();
         }
 
         private void OnEnable()
         {
-            gameManager.gameStartEvent += HandeOnStartGame;
-            //gameManager.gameEndEvent += Stop;
+            gameManager.gameplayStartEvent += StartGameLogic;
+            gameManager.gameplayEndEvent += Stop;
+            gameManager.refreshEvent += Refresh;
             pooler.capacityChangedEvent += SyncCardTypes;
         }
         private void OnDisable()
         {
-            gameManager.gameStartEvent -= HandeOnStartGame;
-            //gameManager.gameEndEvent -= Stop;
+            gameManager.gameplayStartEvent -= StartGameLogic;
+            gameManager.gameplayEndEvent -= Stop;
+            gameManager.refreshEvent -= Refresh;
             pooler.capacityChangedEvent -= SyncCardTypes;
-            Refresh();
+        }
+        public void SetPreparation()
+        {
+            currentCardsController.gameObject.SetActive(true);
+        }
+
+        private void StartGameLogic()
+        {
+            Move();
+            CheckPlayerPosition();
+        }
+
+        public void Pause(bool isPaused)
+        {
+            IsPaused = isPaused;
+        }
+
+        private void Refresh()
+        {
+            currentCardsController.gameObject.SetActive(false);
+            currentSpeed = roadSpeed;
+            mat.mainTextureOffset = Vector2.zero;
+            cardsQue = new Queue<GameObject>();
+            movingCancellationTokenSource = new CancellationTokenSource();
+            stuffCancellationTokenSource = new CancellationTokenSource();
+            SetupStartCards();
+        }
+
+        private void Stop()
+        {
+            movingCancellationTokenSource.Cancel();
+            stuffCancellationTokenSource.Cancel();
         }
 
         private async void CheckPlayerPosition()
         {
-            if (cardsQue == null||currentCardsController==null) return;
+            if (cardsQue == null || currentCardsController == null) return;
             while (Vector3.Distance(playerCenterPosition,
                 currentCardsController.transform.position) > 2f)
             {
@@ -107,16 +139,8 @@ namespace MatchGame.GamePlay.Track
             SetCards();
         }
 
-        private void HandeOnStartGame()
-        {      
-            currentCardsController.gameObject.SetActive(true);
-            Move();
-            CheckPlayerPosition();
-        }
-
         private void SetupStartCards()
         {
-            SyncCardTypes(variantCard.gameObject);
             Vector3 step = new Vector3(0f, 0f, cardsStep);
             if (cardsQue.Count == 0) //first initialization cards setting
             {
@@ -165,23 +189,9 @@ namespace MatchGame.GamePlay.Track
             }
         }
 
-        public void Pause(bool isPaused)
-        {
-            IsPaused = isPaused;
-        }
-
-        private void Stop()
-        {
-            IsPaused = true;
-        }
-
-        private void Refresh()
-        {
-            mat.mainTextureOffset = Vector2.zero;
-        }
-
         private void SyncCardTypes(GameObject prefab) //set dictionary with pooler to get type
         {
+            cardTypes = new Dictionary<GameObject, VariantCardsController>();
             foreach (var item in pooler.PoolDict[prefab])
             {
                 cardTypes.Add(item, item.GetComponent<VariantCardsController>());
