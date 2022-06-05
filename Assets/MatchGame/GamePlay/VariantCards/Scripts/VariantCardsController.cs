@@ -7,6 +7,9 @@ namespace MatchGame.GamePlay.VariantCards
 {
     public class VariantCardsController : MonoBehaviour
     {
+        private static int s_PrevRandomSide=-1;
+        private static int s_CurrentCorrectCardsInRow = 0;
+
         [Inject] private CategoryData categoryData;
         [Inject] private PlayerController playerController;
 
@@ -16,24 +19,35 @@ namespace MatchGame.GamePlay.VariantCards
         public VariantCard LeftCard { get => leftCard; }
         public VariantCard RightCard { get => rightCard; }
 
+        private int maxCorrectCardsInRow = 3;
 
-        private void OnEnable()
-        {
-            SetVariants(playerController.CurrentType);
-        }
         private void OnDisable()
         {
             Refresh();
         }
 
-        private void SetVariants(CategoryType playerType)
-        {
-            var correctCard = Random.Range(0, 2) == 0 ? leftCard : rightCard;
+        public void SetVariants()
+        {          
+            int rnd = Random.Range(0, 2);
+            var correctCard = rnd == 0 ? leftCard : rightCard;
+
+            if (s_PrevRandomSide == rnd)
+            {
+                s_CurrentCorrectCardsInRow++;
+                if (s_CurrentCorrectCardsInRow == maxCorrectCardsInRow - 1)
+                {
+                    correctCard = rnd == 0 ? rightCard : leftCard;
+                    s_PrevRandomSide = correctCard == rightCard ? 0 : 1;
+                    s_CurrentCorrectCardsInRow = 0;
+                }
+            }
+            else { s_PrevRandomSide = rnd; }
             correctCard.IsCorrect = true;
             var wrongCard = correctCard == leftCard ? rightCard : leftCard;
             wrongCard.IsCorrect = false;
-            correctCard.SetSprite(categoryData.GetRandomCorrectSprite(playerType));
-            wrongCard.SetSprite(categoryData.GetRandomWrongSprite(playerType));
+            correctCard.SetSprite(categoryData.GetRandomCorrectSprite(playerController.CurrentType));
+            wrongCard.SetSprite(categoryData.GetRandomWrongSprite(playerController.CurrentType));
+            gameObject.SetActive(true);
         }
 
         private void Refresh()

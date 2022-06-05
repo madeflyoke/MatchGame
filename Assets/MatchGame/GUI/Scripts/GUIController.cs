@@ -1,14 +1,13 @@
 using UnityEngine;
 using Zenject;
 using MatchGame.Managers;
-using MatchGame.GUI.GamePlay.Buttons;
 using MatchGame.GUI.EndGame;
 using MatchGame.GUI.GamePlay;
 using MatchGame.GUI.Tutorial;
 
 namespace MatchGame.GUI
 {
-    public class GUIController : MonoBehaviour
+    public class GUIController : MonoBehaviour, IPausable
     {
         [Inject] private GameManager gameManager;
 
@@ -17,6 +16,8 @@ namespace MatchGame.GUI
         [SerializeField] private TutorialController tutorialController;
 
         public bool TutorialWasShown { get; private set; }
+        public bool IsPaused { get; set; }
+        public GamePlayScreen GamePlayScreen { get => gamePlayScreen; }
 
         private void Awake()
         {
@@ -41,12 +42,13 @@ namespace MatchGame.GUI
         public void SetPreparations()
         {
             gamePlayScreen.Hide(false);
-            if (TutorialWasShown==false)
+            if (TutorialWasShown == false)
             {
                 tutorialController.Hide(false);
                 TutorialWasShown = true;
                 gamePlayScreen.BlockHUD(true);
-            }       
+            }
+            gamePlayScreen.Timer();
         }
 
         private void StartGameLogic()
@@ -60,14 +62,30 @@ namespace MatchGame.GUI
             gamePlayScreen.Hide(true);
             gamePlayScreen.BlockHUD(true);
             endGameScreen.Hide(false);
-            endGameScreen.SetValues(gameManager.MaxAchievedPoints, gameManager.PlayerPrefsData.RecordScore);
+            endGameScreen.SetValues(gamePlayScreen.Stopwatch.Elapsed.ToString("mm\\:ss"),
+                gameManager.PlayerPrefsData.FinalTimeBonus,
+                gameManager.PlayerPrefsData.MaxAchievedPoints,
+                gameManager.PlayerPrefsData.RecordScore);
         }
 
         private void Refresh()
         {
             endGameScreen.Hide(true);
             gamePlayScreen.Refresh();
-        }      
+        }
+
+        public void Pause(bool isPaused)
+        {
+            IsPaused = isPaused;
+            if (isPaused)
+            {
+                gamePlayScreen.Stopwatch.Stop();
+            }
+            else
+            {
+                gamePlayScreen.Stopwatch.Start();
+            }
+        }
     }
 }
 

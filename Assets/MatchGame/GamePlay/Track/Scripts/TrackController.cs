@@ -75,7 +75,7 @@ namespace MatchGame.GamePlay.Track
         }
         public void SetPreparation()
         {
-            currentCardsController.gameObject.SetActive(true);
+            currentCardsController.SetVariants();
         }
 
         private void StartGameLogic()
@@ -136,7 +136,7 @@ namespace MatchGame.GamePlay.Track
             {
                 currentSpeed = Mathf.Clamp(currentSpeed + speedUpAddByCorrectAnswer, 0f, maxRoadSpeed);
             }
-            SetCards();
+            SetNextCards();
         }
 
         private void SetupStartCards()
@@ -155,7 +155,7 @@ namespace MatchGame.GamePlay.Track
             }
         }
 
-        private async void SetCards()
+        private async void SetNextCards()
         {
             Vector3 step = new Vector3(0f, 0f, cardsStep);
             await UniTask.Delay(500, cancellationToken: stuffCancellationTokenSource.Token);
@@ -163,7 +163,7 @@ namespace MatchGame.GamePlay.Track
             cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
             cardsQue.Enqueue(obj); //set new object in tail
             currentCardsController = cardTypes[cardsQue.Peek()];
-            currentCardsController.gameObject.SetActive(true); //activate next obj in head
+            currentCardsController.SetVariants();  //activate next obj in head
             CheckPlayerPosition();
         }
 

@@ -17,7 +17,7 @@ namespace MatchGame.Managers
 {
     public class GameManager : MonoBehaviour
     {
-        [Inject] private GUIController gUIController;
+        [Inject] public GUIController GUIController { get;private set; }
 
         public event Action pointsChangedEvent;
 
@@ -25,14 +25,15 @@ namespace MatchGame.Managers
         public event Action gameplayEndEvent;
         public event Action refreshEvent;
 
-        [SerializeField] private int correctAnswerPointsAdd;
+        [SerializeField] private int correctAnswerPointsAdd;      //estimate max points can be achieved 4775 by 100 steps
         [SerializeField] private int wrongAnswerPointsRemove;
+        [SerializeField] private int bonusPointsBySecond = 10;
         [SerializeField] private int maxCombo = 10;
 
-        public int CurrentPoints { get; private set; }
-        public int MaxAchievedPoints { get; private set; }
         public int CorrectAnswersInRow { get; private set; }
+
         public PlayerPrefsData PlayerPrefsData { get; private set; }
+        public int BonusPointsBySecond { get => bonusPointsBySecond; }
 
         private TrackController trackController;
         private PauseManager pauseManager;
@@ -40,11 +41,11 @@ namespace MatchGame.Managers
         private PlayerVisualChanger playerVisualChanger;
 
         private void Awake()
-        {
+        {          
             Application.targetFrameRate = 240;
             pauseManager = new PauseManager();
-            PlayerPrefsData = new PlayerPrefsData();
-            PlayerPrefsData.Refresh();
+            PlayerPrefsData = new PlayerPrefsData(this);
+            //PlayerPrefsData.ResetPlayerPrefs();
             trackController = FindObjectOfType<TrackController>();
             cameraController = FindObjectOfType<CameraController>();
             playerVisualChanger = FindObjectOfType<PlayerVisualChanger>();
@@ -69,8 +70,8 @@ namespace MatchGame.Managers
                 .OnCompleted(() =>
                 {
                     trackController.SetPreparation();
-                    if (gUIController.TutorialWasShown) StartGameplay();                  
-                    gUIController.SetPreparations();
+                    if (GUIController.TutorialWasShown) StartGameplay();
+                    GUIController.SetPreparations();
                 }
                 ))));
         }
@@ -118,21 +119,18 @@ namespace MatchGame.Managers
 
         private void RefreshPoints()
         {
-            CurrentPoints = 0;
+            PlayerPrefsData.Refresh();
             CorrectAnswersInRow = 0;
         }
 
         private void SetPoints(bool isCorrectAnswer)
         {
             CorrectAnswersInRow = isCorrectAnswer ? Mathf.Clamp(CorrectAnswersInRow + 1, 0, maxCombo) : 0;
-            CurrentPoints += (isCorrectAnswer ? correctAnswerPointsAdd * CorrectAnswersInRow : -wrongAnswerPointsRemove);
-            MaxAchievedPoints = CurrentPoints > MaxAchievedPoints ? CurrentPoints : MaxAchievedPoints;
-            if (CurrentPoints < 0)
+            int points = isCorrectAnswer ? correctAnswerPointsAdd * CorrectAnswersInRow : -wrongAnswerPointsRemove;
+            PlayerPrefsData.ChangePoints(points);
+            if (PlayerPrefsData.CurrentPoints < 0)
             {
-                if (MaxAchievedPoints > PlayerPrefsData.RecordScore) 
-                { 
-                    PlayerPrefsData.SetRecordScore(MaxAchievedPoints); 
-                }
+                PlayerPrefsData.SetRecordScore();
                 EndGamePlay();
                 return;
             }
@@ -165,13 +163,14 @@ namespace MatchGame.Managers
             {
                 isPaused = false;
                 pausables = new List<IPausable>();
-                foreach (var obj in FindObjectsOfType<MonoBehaviour>().OfType<IPausable>())
+                foreach (var obj in FindObjectsOfType<MonoBehaviour>(true).OfType<IPausable>())
                 {
+
                     pausables.Add(obj);
                 }
             }
         }
-    }   
+    }
 }
 
 
