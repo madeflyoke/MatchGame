@@ -14,6 +14,7 @@ namespace MatchGame.GUI
         [SerializeField] private EndGameScreen endGameScreen;
         [SerializeField] private GamePlayScreen gamePlayScreen;
         [SerializeField] private TutorialController tutorialController;
+        [SerializeField] private GameObject titleObj;
 
         public bool TutorialWasShown { get; private set; }
         public bool IsPaused { get; set; }
@@ -28,15 +29,22 @@ namespace MatchGame.GUI
 
         private void OnEnable()
         {
+            gameManager.launchGameEvent += LaunchGameLogic;
             gameManager.gameplayStartEvent += StartGameLogic;
             gameManager.gameplayEndEvent += EndGameLogic;
             gameManager.refreshEvent += Refresh;
         }
         private void OnDisable()
         {
+            gameManager.launchGameEvent -= LaunchGameLogic;
             gameManager.gameplayStartEvent -= StartGameLogic;
             gameManager.gameplayEndEvent -= EndGameLogic;
             gameManager.refreshEvent -= Refresh;
+        }
+
+        public void LaunchGameLogic()
+        {
+            titleObj.SetActive(false);
         }
 
         public void SetPreparations()
@@ -63,8 +71,8 @@ namespace MatchGame.GUI
             gamePlayScreen.BlockHUD(true);
             endGameScreen.Hide(false);
             endGameScreen.SetValues(gamePlayScreen.Stopwatch.Elapsed.ToString("mm\\:ss"),
-                gameManager.PlayerPrefsData.FinalTimeBonus,
-                gameManager.PlayerPrefsData.MaxAchievedPoints,
+                gameManager.PlayerPrefsData.EndGameFinalTimeBonus,
+                gameManager.PlayerPrefsData.AttemptMaxAchievedPoints,
                 gameManager.PlayerPrefsData.RecordScore);
         }
 

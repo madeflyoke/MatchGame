@@ -43,11 +43,11 @@ namespace MatchGame.GUI.GamePlay
 
         private void OnEnable()
         {
-            gameManager.pointsChangedEvent += SetPoints;
+            gameManager.ScoreController.pointsChangedEvent += SetPoints;
         }
         private void OnDisable()
         {
-            gameManager.pointsChangedEvent -= SetPoints;
+            gameManager.ScoreController.pointsChangedEvent -= SetPoints;
         }
 
         private void SetPoints()
@@ -66,8 +66,8 @@ namespace MatchGame.GUI.GamePlay
             }
             prevPoints = points;
             pointsField.text = points.ToString();           
-            comboField.text = gameManager.CorrectAnswersInRow > 0 ?
-                "x" + gameManager.CorrectAnswersInRow.ToString() : string.Empty;
+            comboField.text = gameManager.ScoreController.CorrectAnswersInRow > 0 ?
+                "x" + gameManager.ScoreController.CorrectAnswersInRow.ToString() : string.Empty;
         }
 
         public void Refresh()

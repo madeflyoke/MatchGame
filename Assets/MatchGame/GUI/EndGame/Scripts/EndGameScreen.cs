@@ -34,7 +34,7 @@ namespace MatchGame.GUI.EndGame
             this.timeBonus.text = timeBonusText + $"({time}): +" + timeBonus;
             finalScoreField.text = finalScoreText + finalScore.ToString();
             scoreField.text = scoreText + score.ToString();
-            if (finalScore > recordScore)
+            if (finalScore >= recordScore)
             {
                 recordField.text = recordText + finalScore.ToString();
                 newRecordLabel.SetActive(true);

@@ -71,7 +71,6 @@ namespace MatchGame.GamePlay.Player
             currentTypeObj = visuals[type][UnityEngine.Random.Range(0, visuals[type].Count)];
             if (prevObj==currentTypeObj)
             {
-                Debug.Log("Identical Visuals");
                 ChangeVisual(type);
                 return;
             }

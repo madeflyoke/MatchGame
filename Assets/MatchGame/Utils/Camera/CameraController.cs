@@ -11,25 +11,25 @@ namespace MatchGame.Utils
         [Inject] private GameManager gameManager; 
 
         [SerializeField] private int fullCameraClip;
-        private CinemachineVirtualCamera cam;
+        public CinemachineVirtualCamera Cam { get; private set; }
 
         private void Awake()
         {
-            cam = GetComponent<CinemachineVirtualCamera>();
-            cam.m_Lens.FarClipPlane = 1;          
+            Cam = GetComponent<CinemachineVirtualCamera>();
+            Cam.m_Lens.FarClipPlane = 1;    
         }
 
         private void Start()
         {
-            gameManager.refreshEvent += () => cam.m_Lens.FarClipPlane = 1;
+            gameManager.refreshEvent += () => Cam.m_Lens.FarClipPlane = 1;
         }
 
         public async UniTask<bool> SetPreparation()
         {
-            for (float i = 1; cam.m_Lens.FarClipPlane < fullCameraClip; i += 0.001f)
+            for (float i = 1; Cam.m_Lens.FarClipPlane < fullCameraClip; i += Time.deltaTime)
             {
-                cam.m_Lens.FarClipPlane += i;
-                await UniTask.DelayFrame(2);
+                Cam.m_Lens.FarClipPlane += i;
+                await UniTask.Yield();
             }
             return true;
         }

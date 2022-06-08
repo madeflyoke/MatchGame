@@ -9,8 +9,9 @@ namespace MatchGame.Repository
         private const string RecordScoreKey = "RecordScoreKey";
         public int RecordScore { get; private set; }
         public int CurrentPoints { get; private set; } = 0;
-        public int MaxAchievedPoints { get; private set; } = 0;
-        public int FinalTimeBonus { get; private set; } = 0;
+        public int AttemptMaxAchievedPoints { get; private set; } = 0;
+        public int EndGameFinalTimeBonus { get; private set; } = 0;
+
         private GameManager gameManager;
 
         public PlayerPrefsData(GameManager gameManager)
@@ -30,24 +31,26 @@ namespace MatchGame.Repository
         public void ChangePoints(int additionalPoints)
         {
             CurrentPoints += additionalPoints;
-            MaxAchievedPoints = CurrentPoints > MaxAchievedPoints ? CurrentPoints : MaxAchievedPoints;
+            AttemptMaxAchievedPoints = CurrentPoints > AttemptMaxAchievedPoints ? CurrentPoints : AttemptMaxAchievedPoints;
         }
 
         public void SetRecordScore()
         {
-            FinalTimeBonus = ((int)gameManager.GUIController.GamePlayScreen.Stopwatch.ElapsedMilliseconds / 1000)
-                * gameManager.BonusPointsBySecond;
-            if (MaxAchievedPoints+FinalTimeBonus>RecordScore)
+            EndGameFinalTimeBonus = ((int)gameManager.GUIController.GamePlayScreen.Stopwatch.ElapsedMilliseconds / 1000)
+                * gameManager.ScoreController.BonusPointsBySecond;
+            var finalScore = AttemptMaxAchievedPoints + EndGameFinalTimeBonus;
+            if (finalScore>RecordScore)
             {
-                PlayerPrefs.SetInt(RecordScoreKey, MaxAchievedPoints+FinalTimeBonus);
+                PlayerPrefs.SetInt(RecordScoreKey, AttemptMaxAchievedPoints+EndGameFinalTimeBonus);
+                RecordScore = finalScore;
             }
         }
 
-        public void Refresh()
+        public void RefreshPoints()
         {
             CurrentPoints = 0;
-            MaxAchievedPoints = 0;
-            FinalTimeBonus = 0;
+            AttemptMaxAchievedPoints = 0;
+            EndGameFinalTimeBonus = 0;
         }
 
         public void ResetPlayerPrefs()

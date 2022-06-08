@@ -24,10 +24,11 @@ namespace MatchGame.GamePlay.Player
         private PlayerState currentState;
         private CategoryType currentType;
         private PlayerVisualChanger visualChanger;
-
+        private Camera cam;
 
         private void Awake()
-        {
+        {        
+            cam = Camera.main;
             visualChanger = GetComponentInChildren<PlayerVisualChanger>();
             Initialize();
         }
@@ -49,13 +50,13 @@ namespace MatchGame.GamePlay.Player
 
         private void OnEnable()
         {
-            gameManager.pointsChangedEvent += ChangeCategory;
+            gameManager.ScoreController.pointsChangedEvent += ChangeCategory;
             gameManager.gameplayEndEvent += EndGameLogic;
             gameManager.refreshEvent += Refresh;
         }
         private void OnDisable()
         {
-            gameManager.pointsChangedEvent -= ChangeCategory;
+            gameManager.ScoreController.pointsChangedEvent -= ChangeCategory;
             gameManager.gameplayEndEvent -= EndGameLogic;
             gameManager.refreshEvent -= Refresh;
         }
@@ -70,6 +71,22 @@ namespace MatchGame.GamePlay.Player
             {
                 return;
             }
+
+            if (Input.touchCount > 0)
+            {              
+                float xPos = cam.ScreenToViewportPoint(Input.GetTouch(0).rawPosition).x;
+                if (xPos > 0.55f)
+                {
+                    SetState(PlayerState.MovingRight);
+                } 
+                else if (xPos < 0.45)
+                {
+                    SetState(PlayerState.MovingLeft);
+                }
+            }
+
+#if UNITY_EDITOR
+
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
                 SetState(PlayerState.MovingRight);
@@ -78,6 +95,7 @@ namespace MatchGame.GamePlay.Player
             {
                 SetState(PlayerState.MovingLeft);
             }
+#endif
         }
 
         public void Pause(bool isPaused)

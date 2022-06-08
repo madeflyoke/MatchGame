@@ -7,6 +7,7 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using MatchGame.GamePlay.Player;
 using System;
+using System.Linq;
 
 namespace MatchGame.GamePlay.Track
 {
@@ -23,9 +24,11 @@ namespace MatchGame.GamePlay.Track
         [SerializeField] private float maxRoadSpeed;
         [SerializeField] private float speedUpAddByCorrectAnswer;
         [SerializeField] private Poolable variantCard;
-        [SerializeField] private Material mat;
+
+        //[SerializeField] private Material mat; //if road has texture
 
         public bool IsPaused { get; set; }
+        public float CurrentSpeed { get => currentSpeed; }
         private CancellationTokenSource movingCancellationTokenSource;
         private CancellationTokenSource stuffCancellationTokenSource;
         private Queue<GameObject> cardsQue;
@@ -73,6 +76,7 @@ namespace MatchGame.GamePlay.Track
             gameManager.refreshEvent -= Refresh;
             pooler.capacityChangedEvent -= SyncCardTypes;
         }
+
         public void SetPreparation()
         {
             currentCardsController.SetVariants();
@@ -91,9 +95,12 @@ namespace MatchGame.GamePlay.Track
 
         private void Refresh()
         {
-            currentCardsController.gameObject.SetActive(false);
+            foreach (var item in cardsQue)
+            {
+                item.gameObject.SetActive(false);
+            }
             currentSpeed = roadSpeed;
-            mat.mainTextureOffset = Vector2.zero;
+            //mat.mainTextureOffset = Vector2.zero; //if road has texture
             cardsQue = new Queue<GameObject>();
             movingCancellationTokenSource = new CancellationTokenSource();
             stuffCancellationTokenSource = new CancellationTokenSource();
@@ -108,9 +115,12 @@ namespace MatchGame.GamePlay.Track
 
         private async void CheckPlayerPosition()
         {
-            if (cardsQue == null || currentCardsController == null) return;
+            if (cardsQue == null || currentCardsController == null)
+            {
+                return;
+            }
             while (Vector3.Distance(playerCenterPosition,
-                currentCardsController.transform.position) > 2f)
+                currentCardsController.transform.position) > 3f)
             {
                 if (IsPaused == true)
                 {
@@ -158,12 +168,12 @@ namespace MatchGame.GamePlay.Track
         private async void SetNextCards()
         {
             Vector3 step = new Vector3(0f, 0f, cardsStep);
-            await UniTask.Delay(500, cancellationToken: stuffCancellationTokenSource.Token);
-            var obj = pooler.GetObjectFromPool(variantCard.gameObject, playerCenterPosition + (step * 3));
-            cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
+            var obj = pooler.GetObjectFromPool(variantCard.gameObject, cardsQue.Peek().transform.position + (3 * step));
             cardsQue.Enqueue(obj); //set new object in tail
-            currentCardsController = cardTypes[cardsQue.Peek()];
-            currentCardsController.SetVariants();  //activate next obj in head
+            currentCardsController = cardTypes[cardsQue.ElementAt(1)];
+            currentCardsController.SetVariants();  //activate next obj in head                                  
+            await UniTask.Delay(300, cancellationToken: stuffCancellationTokenSource.Token);
+            cardsQue.Dequeue().SetActive(false); //remove current(prev) object from head
             CheckPlayerPosition();
         }
 
@@ -176,7 +186,7 @@ namespace MatchGame.GamePlay.Track
                     await UniTask.Yield(cancellationToken: movingCancellationTokenSource.Token);
                     continue;
                 }
-                mat.mainTextureOffset -= new Vector2(0f, Time.deltaTime * currentSpeed);
+                //mat.mainTextureOffset -= new Vector2(0f, Time.deltaTime * currentSpeed); ////if road has texture
                 if (cardsQue != null && cardsQue.Count != 0)
                 {
                     foreach (var item in cardsQue)

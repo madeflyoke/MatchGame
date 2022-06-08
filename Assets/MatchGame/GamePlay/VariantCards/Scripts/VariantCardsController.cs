@@ -19,7 +19,7 @@ namespace MatchGame.GamePlay.VariantCards
         public VariantCard LeftCard { get => leftCard; }
         public VariantCard RightCard { get => rightCard; }
 
-        private int maxCorrectCardsInRow = 3;
+        private int maxCorrectCardsInRow = 5;
 
         private void OnDisable()
         {

@@ -18,50 +18,42 @@ namespace MatchGame.Managers
     public class GameManager : MonoBehaviour
     {
         [Inject] public GUIController GUIController { get;private set; }
-
-        public event Action pointsChangedEvent;
+        [Inject] private CameraController cameraController;
 
         public event Action gameplayStartEvent;
         public event Action gameplayEndEvent;
         public event Action refreshEvent;
+        public event Action launchGameEvent;
 
-        [SerializeField] private int correctAnswerPointsAdd;      //estimate max points can be achieved 4775 by 100 steps
-        [SerializeField] private int wrongAnswerPointsRemove;
-        [SerializeField] private int bonusPointsBySecond = 10;
-        [SerializeField] private int maxCombo = 10;
-
-        public int CorrectAnswersInRow { get; private set; }
-
+        [SerializeField] private int fps;
+        [SerializeField] private ScoreController scoreController;
+        [SerializeField] private TrackController trackController;
         public PlayerPrefsData PlayerPrefsData { get; private set; }
-        public int BonusPointsBySecond { get => bonusPointsBySecond; }
-
-        private TrackController trackController;
+        public TrackController TrackController { get => trackController; }
+        public ScoreController ScoreController { get => scoreController; }
         private PauseManager pauseManager;
-        private CameraController cameraController;
         private PlayerVisualChanger playerVisualChanger;
 
         private void Awake()
         {          
-            Application.targetFrameRate = 240;
+            Application.targetFrameRate = fps;
             pauseManager = new PauseManager();
             PlayerPrefsData = new PlayerPrefsData(this);
-            //PlayerPrefsData.ResetPlayerPrefs();
-            trackController = FindObjectOfType<TrackController>();
-            cameraController = FindObjectOfType<CameraController>();
+            //PlayerPrefsData.ResetPlayerPrefs(); //debug score record
             playerVisualChanger = FindObjectOfType<PlayerVisualChanger>();
             pauseManager.Pause(true);
         }
 
         private void OnEnable()
         {
-            trackController.isCorrectAnswerEvent += SetPoints;
+            ScoreController.endGameScoreEvent += EndGamePlay;
         }
         private void OnDisable()
         {
-            trackController.isCorrectAnswerEvent -= SetPoints;
+            ScoreController.endGameScoreEvent -= EndGamePlay;
         }
 
-        private void StartPreparations() //try callback!!!!!!!!!
+        private void StartPreparations() //try callback??
         {
             cameraController.SetPreparation().GetAwaiter()
                 .OnCompleted(() => UniTask.Delay(250).GetAwaiter()
@@ -69,7 +61,7 @@ namespace MatchGame.Managers
                 .OnCompleted(() => UniTask.Delay(1000).GetAwaiter()
                 .OnCompleted(() =>
                 {
-                    trackController.SetPreparation();
+                    TrackController.SetPreparation();
                     if (GUIController.TutorialWasShown) StartGameplay();
                     GUIController.SetPreparations();
                 }
@@ -81,6 +73,7 @@ namespace MatchGame.Managers
             var type = button.GetType();
             if (type == typeof(LaunchGameButton))
             {
+                launchGameEvent?.Invoke();
                 StartPreparations();
             }
             else if (type == typeof(TutorialConfirmButton))
@@ -111,31 +104,11 @@ namespace MatchGame.Managers
 
         private async void RetryGame()
         {
-            RefreshPoints();
             refreshEvent?.Invoke();
             await UniTask.Delay(1000); // wait for everyone??
             StartPreparations();
         }
 
-        private void RefreshPoints()
-        {
-            PlayerPrefsData.Refresh();
-            CorrectAnswersInRow = 0;
-        }
-
-        private void SetPoints(bool isCorrectAnswer)
-        {
-            CorrectAnswersInRow = isCorrectAnswer ? Mathf.Clamp(CorrectAnswersInRow + 1, 0, maxCombo) : 0;
-            int points = isCorrectAnswer ? correctAnswerPointsAdd * CorrectAnswersInRow : -wrongAnswerPointsRemove;
-            PlayerPrefsData.ChangePoints(points);
-            if (PlayerPrefsData.CurrentPoints < 0)
-            {
-                PlayerPrefsData.SetRecordScore();
-                EndGamePlay();
-                return;
-            }
-            pointsChangedEvent?.Invoke();
-        }
         private class PauseManager
         {
             private List<IPausable> pausables;
