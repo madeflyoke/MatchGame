@@ -4,12 +4,13 @@ using System.Threading;
 using System;
 using Zenject;
 using MatchGame.Managers;
+using UnityEngine.EventSystems;
 
 namespace MatchGame.GamePlay.Player
 {
     public class PlayerController : MonoBehaviour, IPausable
     {
-        [Inject] private GameManager gameManager; 
+        [Inject] private GameManager gameManager;
 
         [SerializeField] private float sideSpeed;
         [SerializeField] private Transform leftLine;
@@ -27,7 +28,7 @@ namespace MatchGame.GamePlay.Player
         private Camera cam;
 
         private void Awake()
-        {        
+        {
             cam = Camera.main;
             visualChanger = GetComponentInChildren<PlayerVisualChanger>();
             Initialize();
@@ -63,7 +64,7 @@ namespace MatchGame.GamePlay.Player
 
         void Update()
         {
-            if (IsPaused==true)
+            if (IsPaused == true)
             {
                 return;
             }
@@ -71,14 +72,18 @@ namespace MatchGame.GamePlay.Player
             {
                 return;
             }
-
             if (Input.touchCount > 0)
-            {              
-                float xPos = cam.ScreenToViewportPoint(Input.GetTouch(0).rawPosition).x;
+            {
+                var touch = Input.GetTouch(0);
+                if (touch.phase!=TouchPhase.Began||EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    return;
+                }
+                float xPos = cam.ScreenToViewportPoint(touch.rawPosition).x;
                 if (xPos > 0.55f)
                 {
                     SetState(PlayerState.MovingRight);
-                } 
+                }
                 else if (xPos < 0.45)
                 {
                     SetState(PlayerState.MovingLeft);
@@ -86,14 +91,21 @@ namespace MatchGame.GamePlay.Player
             }
 
 #if UNITY_EDITOR
-
-            if (Input.GetKeyDown(KeyCode.RightArrow))
+            if (Input.GetKeyDown(KeyCode.Mouse0))
             {
-                SetState(PlayerState.MovingRight);
-            }
-            else if (Input.GetKeyDown(KeyCode.LeftArrow))
-            {
-                SetState(PlayerState.MovingLeft);
+                if (EventSystem.current.IsPointerOverGameObject())
+                {
+                    return;
+                }
+                float xPos = cam.ScreenToViewportPoint(Input.mousePosition).x;
+                if (xPos > 0.55f)
+                {
+                    SetState(PlayerState.MovingRight);
+                }
+                else if (xPos < 0.45)
+                {
+                    SetState(PlayerState.MovingLeft);
+                }
             }
 #endif
         }
