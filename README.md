@@ -1,6 +1,7 @@
-# SkyMatch3D (Match Game)
+# Match Game
 
 ## Details
+* Title: "SkyMatch3d"
 * Genre(s): Matching game, Casual, Arcade
 * Platform(s): Android
 * Engine: Unity
