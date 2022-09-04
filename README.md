@@ -1,4 +1,4 @@
-# SkyMatch3D
+# SkyMatch3D (Match Game)
 
 ## Details
 * Genre(s): Matching game, Casual, Arcade
